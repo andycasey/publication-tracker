@@ -1,0 +1,15 @@
+**/**
+!src/**/*.gs
+!src/**/*.html
+!appsscript.json
+.git
+.gitignore
+node_modules
+package.json
+package-lock.json
+setup.js
+README.md
+API_KEYS_GUIDE.md
+DEPLOYMENT_GUIDE.md
+.github
+Code.gs

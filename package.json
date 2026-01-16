@@ -1,0 +1,29 @@
+{
+  "name": "publication-tracker",
+  "version": "1.0.0",
+  "description": "Automated publication tracking system for academic institutions",
+  "main": "index.js",
+  "scripts": {
+    "setup": "node setup.js",
+    "login": "clasp login",
+    "push": "clasp push",
+    "pull": "clasp pull",
+    "deploy": "clasp push && clasp deploy",
+    "open": "clasp open"
+  },
+  "keywords": [
+    "publications",
+    "academic",
+    "nasa-ads",
+    "arxiv",
+    "google-apps-script"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  },
+  "dependencies": {
+    "inquirer": "^8.2.5"
+  }
+}

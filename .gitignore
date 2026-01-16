@@ -1,0 +1,30 @@
+# Node
+node_modules/
+package-lock.json
+
+# Clasp
+.clasp.json
+.clasprc.json
+
+# Google Apps Script
+.DS_Store
+
+# Files with API keys (DO NOT COMMIT)
+Code.gs
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
