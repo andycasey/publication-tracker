@@ -392,6 +392,18 @@
     }
 
     function testApis() {
+      // Get current form values
+      const nasaAdsApiKey = document.getElementById('nasaAdsApiKey').value;
+      const geminiApiKey = document.getElementById('geminiApiKey').value;
+      const serpapiApiKey = document.getElementById('serpapiApiKey').value;
+      const geminiModel = document.getElementById('geminiModel').value;
+
+      // Validate that at least some keys are provided
+      if (!nasaAdsApiKey && !geminiApiKey && !serpapiApiKey) {
+        showStatus('Please enter at least one API key to test.', 'error');
+        return;
+      }
+
       showLoading(true);
 
       google.script.run
@@ -423,7 +435,7 @@
           showLoading(false);
           showStatus('Error testing APIs: ' + error, 'error');
         })
-        .testApiConnections();
+        .testApiConnections(nasaAdsApiKey, geminiApiKey, serpapiApiKey, geminiModel);
     }
 
     document.getElementById('setupForm').addEventListener('submit', function(e) {

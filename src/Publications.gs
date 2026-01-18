@@ -8,25 +8,29 @@
  */
 function publicationData(pub) {
   const now = (new Date()).toISOString();
+
+  // Truncate long fields to avoid Google Sheets 50,000 character limit
+  const maxLength = 49000;
+  const truncate = (str) => {
+    if (!str) return str;
+    return str.length > maxLength ? str.substring(0, maxLength) + '...[truncated]' : str;
+  };
+
   return [
-    pub.tldr,
+    truncate(pub.tldr),
     pub.figure_url,
-    pub.byline_citation,
-    pub.cross_center,
-    pub.cca_authors,
-    pub.ccx_authors,
-    pub.citation,
+    truncate(pub.byline_citation),
     pub.id,
     pub.bibcode,
     pub.arxiv_identifier,
     pub.doi,
-    pub.title,
-    pub.authors,
-    pub.pub,
+    truncate(pub.title),
+    truncate(pub.authors),
+    truncate(pub.pub),
     pub.bibstem,
-    pub.publisher,
-    pub.copyright,
-    pub.abstract,
+    truncate(pub.publisher),
+    truncate(pub.copyright),
+    truncate(pub.abstract),
     pub.volume,
     pub.issue,
     pub.page,
@@ -257,15 +261,21 @@ function synchronizeSheet(limit=null, do_google_scholar=false) {
     ]);
   });
 
-  // Update existing
+  // Update existing (in batches of 100)
   logger("Updating existing ", updated.updated_publications);
   if (updated.updated_publications > 0) {
     logger("Truly updating.." + publication_data.length);
-    (
+    const batchSize = 100;
+    const chunks = splitListIntoChunks(publication_data, batchSize);
+
+    chunks.forEach((chunk, chunkIndex) => {
+      const startRow = 1 + constants.HEADER_ROWS + (chunkIndex * batchSize);
+      const numCols = publicationData({}).length - constants.LEFT_DO_NOT_OVERWRITE;
+
       sheet
-      .getRange(1 + constants.HEADER_ROWS, constants.LEFT_COLUMNS + constants.LEFT_DO_NOT_OVERWRITE, publication_data.length, publicationData({}).length - constants.LEFT_DO_NOT_OVERWRITE)
-      .setValues(publication_data)
-    );
+        .getRange(startRow, constants.LEFT_COLUMNS + constants.LEFT_DO_NOT_OVERWRITE, chunk.length, numCols)
+        .setValues(chunk);
+    });
   }
 
   // Insert new publications

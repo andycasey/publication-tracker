@@ -8,18 +8,22 @@
  */
 function onOpen() {
   const config = getConfig();
+  const isOwner = isCurrentUserOwner();
 
   // Check if setup is complete
   if (!config.isSetupComplete()) {
-    SpreadsheetApp.getUi()
-      .createMenu('Publications')
-      .addItem('⚙️ Run Setup Wizard', 'showSetupWizard')
-      .addToUi();
+    // Only show setup wizard to the owner
+    if (isOwner) {
+      SpreadsheetApp.getUi()
+        .createMenu('Publications')
+        .addItem('⚙️ Run Setup Wizard', 'showSetupWizard')
+        .addToUi();
+    }
     return;
   }
 
   // Regular menu
-  SpreadsheetApp.getUi()
+  const menu = SpreadsheetApp.getUi()
     .createMenu('Publications')
     .addItem('Search for new papers', 'synchronizeSheet')
     .addItem('Summarise and create slides for recent papers', 'summariseMostRecentPapers')
@@ -30,10 +34,15 @@ function onOpen() {
         .addItem('Summarising new papers', 'periodicSynchronizeSheet')
         .addItem('Create slide deck from staging', 'periodicCreateNewSlideDeck')
         .addItem('Test slide deck creation', 'testCreateNewSlideDeck'),
-    )
-    .addSeparator()
-    .addItem('⚙️ Configuration', 'showSetupWizard')
-    .addToUi();
+    );
+
+  // Only add Configuration option for the owner
+  if (isOwner) {
+    menu.addSeparator()
+        .addItem('⚙️ Configuration', 'showSetupWizard');
+  }
+
+  menu.addToUi();
 }
 
 /**

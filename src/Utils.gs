@@ -61,20 +61,11 @@ function getColumnData(sheet, column) {
 }
 
 /**
- * Insert publication rows with checkboxes
+ * Insert publication rows
  */
 function insertPublicationRows(sheet, rows=1) {
   const constants = getConstants();
-
   sheet.insertRowsBefore(constants.HEADER_ROWS + 1, rows);
-
-  sheet
-    .getRange(1 + constants.HEADER_ROWS, 1, rows, constants.LEFT_COLUMNS)
-    .insertCheckboxes();
-
-  sheet
-    .getRange(1 + constants.HEADER_ROWS, constants.COLUMN_CROSS_CENTER, rows, 1)
-    .insertCheckboxes();
 }
 
 /**
@@ -101,120 +92,14 @@ function getArxivNumber(alternate_bibcode) {
 }
 
 /**
- * Parse Flatiron affiliation to determine center
- * This can be customized for other institutions
- */
-function parseFlatironAffiliation(aff) {
-  const is_fi = (aff.match(/Flatiron Institute/) !== null);
-  const is_scc = (aff.match(/Scientific Computing Core/) !== null);
-
-  const ccx = {
-    "Astrophysics": "CCA",
-    "Quantum Mechanics": "CCQ",
-    "Mathematics": "CCM",
-    "Biology": "CCB",
-    "Neuroscience": "CCN",
-  };
-
-  const name = aff.match(/Cent[er]{2} for Computational (\w+\s?\w+|\w+), Flatiron Institute/);
-
-  return {
-    is_fi: is_fi,
-    is_scc: is_scc,
-    ccx: name === null ? null : ccx[name[1]],
-  };
-}
-
-/**
- * Format author list for citation (first last, (...) and others)
- */
-function citationAuthorList(doc, showFirst=3, ellipsis="{...}") {
-  var author_names = [];
-
-  for (let a=0; a < doc.author.length; a++) {
-    if ((a < showFirst) | (doc.cca_author.includes(doc.author[a]))) {
-      if (doc.author[a].indexOf(",") <= 0) {
-        author_names.push(doc.author[a]);
-      } else {
-        const last = doc.author[a].split(",")[0];
-        const given = doc.author[a].split(", ")[1];
-        author_names.push(given + " " + last);
-      }
-    } else {
-      author_names.push("{...}");
-    }
-  }
-
-  var v = (
-    author_names
-    .join(" and ")
-    .replace(/( and \{\.\.\.\})+/g, ' and {...}')
-    .replace(/ and \{\.\.\.\}$/, " and others")
-    .replace('{...}', ellipsis)
-  );
-
-  return v;
-}
-
-/**
- * Format author list for slides
- */
-function slideCitationAuthorList(doc, showFirst=1) {
-  var author_names = [];
-
-  for (let a=0; a < doc.author.length; a++) {
-    if ((a < showFirst) | (doc.cca_author.includes(doc.author[a]))) {
-      if (doc.author[a].indexOf(",") <= 0) {
-        author_names.push(doc.author[a]);
-      } else {
-        const last = doc.author[a].split(",")[0];
-        const given = doc.author[a].split(", ")[1];
-        author_names.push(given + " " + last);
-      }
-    } else {
-      author_names.push("...");
-    }
-  }
-
-  var s = (
-    author_names
-    .join(", ")
-    .replace(/(\.\.\.,\s)+/g, '..., ')
-    .replace(/\.\.\.$/, " and others")
-  );
-
-  var s = s.replace(", ...,  and others", ", and others");
-  return s;
-}
-
-/**
  * Format shortened author list
  */
 function shortenedAuthorList(authors, show_max_authors = 5) {
   if (authors.length > show_max_authors) {
-    var author_names = authors[0]["name"];
-    var cca_author_names = [];
-
-    authors.forEach(author => {
-      if (author["has_cca_affiliation"]) {
-        cca_author_names.push(author["name"]);
-      }
-    });
-
-    if ((cca_author_names.length > 0) & (cca_author_names[0] != authors[0]["name"])) {
-      author_names = author_names + " et al., including " + cca_author_names.join(", ");
-    } else {
-      author_names += " et al.";
-    }
+    return authors[0] + " et al.";
   } else {
-    var author_names = [];
-    authors.forEach(author => {
-      author_names.push(author["name"]);
-    });
-    author_names = author_names.join(", ");
+    return authors.join(", ");
   }
-
-  return author_names;
 }
 
 /**
@@ -266,4 +151,21 @@ function getSearchAuthorNames() {
     lastNames: SEARCH_AUTHOR_LAST_NAMES,
     fullNames: SEARCH_AUTHOR_NAMES
   };
+}
+
+/**
+ * Check if the current user is the owner of the spreadsheet
+ */
+function isCurrentUserOwner() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const owner = spreadsheet.getOwner();
+    const currentUser = Session.getEffectiveUser();
+
+    return owner.getEmail() === currentUser.getEmail();
+  } catch (error) {
+    logger("Error checking spreadsheet ownership: " + error.toString());
+    // Default to false if we can't determine ownership
+    return false;
+  }
 }

@@ -49,30 +49,7 @@ function queryADS(limit=null) {
       doc.arxiv_html_url = doc.arxiv_number === null ? null : "https://arxiv.org/html/" + doc.arxiv_number + "v1";
       doc.ads_url = "http://ui.adsabs.harvard.edu/abs/" + doc.bibcode + "/abstract";
       doc.authors = doc.author.join("; ");
-      doc.title = doc.title[0];
-
-      // Parse author information
-      var is_author_from_cca = [];
-      var is_author_from_ccx = [];
-
-      for (let a=0; a < doc.author.length; a++) {
-        const aff = parseFlatironAffiliation(doc.aff[a]);
-        is_author_from_cca.push(
-          (aff.ccx == "CCA") | ((aff.is_fi) & (!aff.is_scc) & (aff.ccx === null))
-        );
-        is_author_from_ccx.push(
-          (aff.is_fi) & (aff.ccx !== null) & (aff.ccx != "CCA")
-        );
-      }
-
-      var cca_author_names = doc.author.filter((str, index) => is_author_from_cca[index]);
-      var ccx_author_names = doc.author.filter((str, index) => (is_author_from_ccx[index] & !is_author_from_cca[index]));
-
-      doc.cca_author = cca_author_names;
-      doc.ccx_author = ccx_author_names;
-      doc.cca_authors = cca_author_names.length == 0 ? null : cca_author_names.join("; ");
-      doc.ccx_authors = ccx_author_names.length == 0 ? null : ccx_author_names.join("; ");
-      doc.cross_center = ccx_author_names.length > 0;
+      doc.title = (doc.title === undefined ? "" : doc.title[0]);
       doc.issue = (doc.issue === undefined ? "" : doc.issue);
       doc.pub_month = constants.months[parseInt(doc.pubdate.split("-")[1]) - 1];
       doc.posted_year = (doc.arxiv_number === null ? "" : "20" + doc.arxiv_number.substring(0, 2));
@@ -81,47 +58,20 @@ function queryADS(limit=null) {
       doc.publisher = (doc.publisher === undefined ? doc.pub : doc.publisher);
       doc.doi = (doc.doi === undefined ? null : doc.doi[0]);
 
-      var citation_key = [];
-      cca_author_names.forEach(n => {
-        citation_key.push(n.split(",")[0].replace(" ", "_"));
-      });
-      citation_key = citation_key.join("_");
+      // Create byline citation
+      const firstAuthor = doc.author[0].split(",")[0];
+      const authorCount = doc.author.length;
+      const authorText = authorCount > 1 ? firstAuthor + " et al." : firstAuthor;
+      doc.byline_citation = authorText + ", " + doc.pub + ", " + (doc.volume === undefined ? "accepted" : doc.volume) + (doc.issue === undefined ? "" : ", " + doc.issue) + " (" + doc.pub_year + ").";
 
-      if (doc.arxiv_number !== null) {
-        citation_key += "_arXiv:" + doc.arxiv_number;
-      }
-      citation_key += "_" + doc.bibstem + "_" + doc.pubdate.substring(0, 4);
-
-      doc.byline_citation = slideCitationAuthorList(doc) + ". " + doc.pub + ", " + (doc.volume === undefined ? ", accepted" : doc.volume + ", ") + (doc.issue === undefined ? "" : doc.issue) + " (" + doc.pub_year + ").";
-
-      doc.citation = (
-        "@article{" + citation_key + ",\n"
-      + " Archivepreix = {arXiv},\n"
-      + " Author = {" + citationAuthorList(doc) + "},\n"
-      + " Doi = {" + doc.doi + "},\n"
-      + " Eprint = {" + (doc.arxiv_number === null ? "" : doc.arxiv_number) + "},\n"
-      + " Journal = " + doc.bibstem + ",\n"
-      + " Issue = {" + doc.issue + "},\n"
-      + " Pages = {" + (doc.page === undefined ? "" : doc.page) + "},\n"
-      + " Publisher = {" + doc.publisher + "},\n"
-      + " Title = {{" + doc.title + "}},\n"
-      + " Url = {" + doc.ads_url + "},\n"
-      + " OpenAccessURL = {" + (doc.arxiv_url === null ? "" : doc.arxiv_url) + "},\n"
-      + " Volume = {" + (doc.volume === undefined ? "" : doc.volume) + "},\n"
-      + " Year = {" + doc.pub_year + "},\n"
-      + " year_posted = {" + doc.posted_year + "},\n"
-      + " center = {CCA},\n"
-      + " acrosscenters = {" + (doc.cross_center ? "yes" : "no") + "},\n"
-      + " external = {yes},\n"
-      + " highlight = {no},\n"
-      + " Month = {" + doc.pub_month + "},\n"
-      + " Day = {01},\n"
-      + " abstract = {" + doc.abstract + "}\n"
-      +"}");
+      // Placeholder values for removed fields
+      doc.tldr = null;
+      doc.figure_url = null;
+      doc.cite_read_boost = doc.cite_read_boost || null;
+      doc.classic_factor = doc.classic_factor || null;
     });
 
-    var d_filtered = d.filter((doc, index) => (doc.cca_author.length > 0));
-    docs = [...docs, ...d_filtered];
+    docs = [...docs, ...d];
 
     if ((num_rows == 0) | (num_rows < max_rows) | ((limit !== null) & (docs.length >= limit))) {
       break;
@@ -175,34 +125,20 @@ function queryArXiv(limit=null) {
       m.posted_year = m.pub_year;
       m.pub_month = constants.months[parseInt(m.arxiv_number.substring(2,4)) - 1];
       m.authors = m.author.join("; ");
-      m.cca_authors = m.cca_author.join("; ");
 
-      var citation_key = [];
-      m.cca_author.forEach(n => {
-        let t = n.split(" ");
-        citation_key.push(t[t.length - 1]);
-      });
-      citation_key = citation_key.join("_");
-      citation_key += "_arXiv:" + m.arxiv_number;
-      m.byline_citation = slideCitationAuthorList(m) + " (arXiv:" + m.arxiv_number + ").";
+      // Create byline citation
+      const firstAuthor = m.author[0].split(" ").pop();
+      const authorText = m.author.length > 1 ? firstAuthor + " et al." : firstAuthor;
+      m.byline_citation = authorText + " (arXiv:" + m.arxiv_number + ").";
 
-      m.citation = (
-        "@article{" + citation_key + ",\n"
-      + "Archiveprefix = {arXiv},\n"
-      + "Author = {" + citationAuthorList(m) + "},\n"
-      + "Eprint = {" + m.arxiv_number + "},\n"
-      + "Journal = {arXiv e-prints},\n"
-      + "Title = {{" + m.title + "}},\n"
-      + "OpenAccessURL = {" + m.arxiv_url + "},\n"
-      + "year_posted = {" + m.posted_year + "},\n"
-      + "center = {CCA},\n"
-      + "acrosscenters = {no},\n"
-      + "external = {yes},\n"
-      + "highlight = {no},\n"
-      + "Month = {" + m.pub_month + "},\n"
-      + "Day = {" + m.published.split("-")[2].split("T")[0] + "},\n"
-      + "abstract = {" + m.abstract + "}\n"
-      +"}");
+      // Placeholder values
+      m.tldr = null;
+      m.figure_url = null;
+      m.cite_read_boost = null;
+      m.classic_factor = null;
+      m.bibstem = null;
+      m.publisher = null;
+      m.copyright = null;
     });
 
     all_manuscripts = [...all_manuscripts, ...ms];
@@ -250,34 +186,20 @@ function queryArXivPrePrint(arxiv_identifier) {
   m.posted_year = m.pub_year;
   m.pub_month = constants.months[parseInt(m.arxiv_number.substring(2,4)) - 1];
   m.authors = m.author.join("; ");
-  m.cca_authors = m.cca_author.join("; ");
 
-  var citation_key = [];
-  m.cca_author.forEach(n => {
-    let t = n.split(" ");
-    citation_key.push(t[t.length - 1]);
-  });
-  citation_key = citation_key.join("_");
-  citation_key += "_arXiv:" + m.arxiv_number;
-  m.byline_citation = slideCitationAuthorList(m) + " (arXiv:" + m.arxiv_number + ").";
+  // Create byline citation
+  const firstAuthor = m.author[0].split(" ").pop();
+  const authorText = m.author.length > 1 ? firstAuthor + " et al." : firstAuthor;
+  m.byline_citation = authorText + " (arXiv:" + m.arxiv_number + ").";
 
-  m.citation = (
-    "@article{" + citation_key + ",\n"
-  + "Archiveprefix = {arXiv},\n"
-  + "Author = {" + citationAuthorList(m) + "},\n"
-  + "Eprint = {" + m.arxiv_number + "},\n"
-  + "Journal = {arXiv e-prints},\n"
-  + "Title = {{" + m.title + "}},\n"
-  + "OpenAccessURL = {" + m.arxiv_url + "},\n"
-  + "year_posted = {" + m.posted_year + "},\n"
-  + "center = {CCA},\n"
-  + "acrosscenters = {no},\n"
-  + "external = {yes},\n"
-  + "highlight = {no},\n"
-  + "Month = {" + m.pub_month + "},\n"
-  + "Day = {" + m.published.split("-")[2].split("T")[0] + "},\n"
-  + "abstract = {" + m.abstract + "}\n"
-  +"}");
+  // Placeholder values
+  m.tldr = null;
+  m.figure_url = null;
+  m.cite_read_boost = null;
+  m.classic_factor = null;
+  m.bibstem = null;
+  m.publisher = null;
+  m.copyright = null;
 
   return m;
 }
@@ -294,7 +216,7 @@ function parseArXiv(feed, since = null) {
 
   document.getRootElement().getChildren().forEach(item => {
     if (item.getName() == "entry") {
-      var parsed_entry = {author: [], aff: [], cca_author: [], ccx_author: []};
+      var parsed_entry = {author: [], aff: []};
 
       item.getChildren().forEach(sub_item => {
         name = sub_item.getName();
@@ -312,9 +234,7 @@ function parseArXiv(feed, since = null) {
         if (name == "author") {
           var parsed = {
             name: null,
-            aff: [],
-            has_cca_affiliation: false,
-            has_fi_affiliation: false
+            aff: []
           };
 
           sub_item.getChildren().forEach(author_attr => {
@@ -323,42 +243,11 @@ function parseArXiv(feed, since = null) {
             } else {
               affiliation_text = author_attr.getText();
               parsed.aff.push(affiliation_text);
-
-              if ((affiliation_text.indexOf("Flatiron Institute") !== -1)) {
-                parsed.has_fi_affiliation = true;
-              }
-
-              if (
-                (affiliation_text.indexOf("Center for Computational Astrophysics") !== -1)
-              | (affiliation_text.indexOf("Centre for Computational Astrophysics") !== -1)
-              ) {
-                parsed.has_cca_affiliation = true;
-              }
             }
           });
 
-          if (sub_item.getChildren().length == 1) {
-            // No affiliation information
-            last_name = parsed["name"].split(" ").at(-1);
-            var last_name_index = authorNames.lastNames.indexOf(last_name);
-
-            if (last_name_index > -1) {
-              if (parsed["name"].substring(0, 1) == authorNames.fullNames[last_name_index].substring(0, 1)) {
-                parsed.has_cca_affiliation = true;
-              }
-            }
-          }
-
           parsed_entry["author"].push(parsed["name"]);
           parsed_entry["aff"].push(parsed["aff"]);
-
-          if (parsed.has_cca_affiliation) {
-            parsed_entry["cca_author"].push(parsed["name"]);
-          } else {
-            if (parsed.has_fi_affiliation) {
-              parsed_entry["ccx_author"].push(parsed["name"]);
-            }
-          }
         }
       });
 
