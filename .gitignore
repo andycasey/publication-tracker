@@ -3,7 +3,6 @@ node_modules/
 package-lock.json
 
 # Clasp
-.clasp.json
 .clasprc.json
 
 # Google Apps Script
