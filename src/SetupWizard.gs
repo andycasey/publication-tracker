@@ -287,8 +287,8 @@ function completeSetup(configData) {
       logger('Could not delete Instructions sheet: ' + error.toString());
     }
 
-    // Run initial synchronization
-    synchronizeSheet(null, false);
+    // Run initial synchronization for 100 papers)
+    synchronizeSheet(limit=100, false);
 
     return {
       success: true,
