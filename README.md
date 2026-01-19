@@ -11,9 +11,9 @@ An automated system for tracking academic publications from your institution usi
 - 📈 **Impact Tracking**: Monitors citation counts and read counts over time
 - ⚙️ **Easy Configuration**: Web-based setup wizard (no coding required!)
 
-## Two Deployment Options
+## Deploy Your Own
 
-### ⭐ Option 1: Template Spreadsheet (Recommended for Most Users)
+[Copy the template spreadsheet](https://docs.google.com/spreadsheets/d/1vPGPtKUg2ouSt_dY4AFU2kRB8PrgCkpHoUUnHFT_ZKU) to get started.
 
 **Best for:** Non-technical users, quick setup, individual departments
 
@@ -23,11 +23,9 @@ An automated system for tracking academic publications from your institution usi
 - ✅ Just copy a spreadsheet
 - ✅ Perfect for non-technical users
 
-**Get started:** See **[FOR_END_USERS.md](./FOR_END_USERS.md)**
-
 ---
 
-### 🔧 Option 2: GitHub Deployment (For Developers)
+### 🔧 Or, you can Fork it
 
 **Best for:** Developers, version control, automated deployments, maintaining code
 
