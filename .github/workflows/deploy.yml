@@ -27,7 +27,10 @@ jobs:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
           echo "$CLASPRC_JSON" | jq '.' > ~/.clasprc.json
+          echo "=== Contents of ~/.clasprc.json ==="
           cat ~/.clasprc.json
+          echo "=== Validating JSON structure ==="
+          jq '.tokens.default' ~/.clasprc.json
 
       - name: Push to Google Apps Script
         run: clasp push
