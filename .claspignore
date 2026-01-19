@@ -1,6 +1,6 @@
 **/**
-!src/**/*.gs
-!src/**/*.html
+!**/*.gs
+!**/*.html
 !appsscript.json
 .git
 .gitignore
