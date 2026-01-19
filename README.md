@@ -76,7 +76,7 @@ An automated system for tracking academic publications from your institution usi
    - Open the Google Spreadsheet you created/connected
    - A "Publications" menu will appear
    - Click "Publications" > "⚙️ Run Setup Wizard"
-   - Fill in your institution details and API keys (see [API Keys Guide](./API_KEYS_GUIDE.md))
+   - Fill in your institution details and API keys
 
 ## Configuration
 
@@ -93,7 +93,6 @@ You'll need three API keys:
 3. **SerpAPI API Key** - For Google Scholar searches
    - Get it at: https://serpapi.com/manage-api-key
 
-For detailed instructions, see [API_KEYS_GUIDE.md](./API_KEYS_GUIDE.md)
 
 ### Setup Wizard
 
@@ -159,7 +158,9 @@ To set up automatic deployment when you push changes to GitHub:
 ```
 publication-tracker/
 ├── src/
+│   ├── appsscript.json     # Apps Script manifest 
 │   ├── Config.gs           # Configuration management
+│   ├── SetupWizard.gs      # Setup wizard server-side code
 │   ├── SetupWizard.gs      # Setup wizard server-side code
 │   ├── SetupWizard.html    # Setup wizard UI
 │   ├── Utils.gs            # Utility functions
@@ -172,10 +173,8 @@ publication-tracker/
 │       └── deploy.yml      # GitHub Actions workflow
 ├── setup.js                # Local setup script
 ├── package.json
-├── appsscript.json         # Apps Script manifest
 ├── .claspignore
-├── README.md
-└── API_KEYS_GUIDE.md
+└── README.md 
 ```
 
 ## Customization
@@ -265,14 +264,12 @@ MIT License - see LICENSE file for details
 
 ## Credits
 
-Originally developed for the Flatiron Institute's Center for Computational Astrophysics.
-Refactored and generalized by Andrew Casey.
+Written by Andy Casey, originally developed for the Flatiron Institute's Center for Computational Astrophysics.
 
 ## Support
 
 For issues and questions:
 - Open an issue on GitHub
-- Check the [API Keys Guide](./API_KEYS_GUIDE.md) for API-related problems
 - Review Apps Script execution logs for errors
 
 ## Creating a Template Spreadsheet
