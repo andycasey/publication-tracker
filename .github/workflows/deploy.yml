@@ -23,17 +23,36 @@ jobs:
         run: npm install -g @google/clasp
 
       - name: Create .clasprc.json
-        env:
-          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
-          echo "$CLASPRC_JSON" | jq '.' > ~/.clasprc.json
-          echo "=== Contents of ~/.clasprc.json ==="
-          cat ~/.clasprc.json
-          echo "=== Validating JSON structure ==="
-          jq '.tokens.default' ~/.clasprc.json
+          # Convert new clasp format to old format that GitHub Actions clasp expects
+          echo '${{ secrets.CLASPRC_JSON }}' | jq '{
+            token: .tokens.default,
+            oauth2ClientSettings: {
+              clientId: .tokens.default.client_id,
+              clientSecret: .tokens.default.client_secret,
+              redirectUri: "http://localhost"
+            },
+            isLocalCreds: false
+          }' > ~/.clasprc.json
+
+      - name: Verify .clasprc.json
+        run: |
+          echo "Checking if .clasprc.json exists and is valid JSON..."
+          if [ -f ~/.clasprc.json ]; then
+            echo "File exists"
+            if jq empty ~/.clasprc.json 2>/dev/null; then
+              echo "Valid JSON format ✓"
+            else
+              echo "ERROR: Invalid JSON format"
+              exit 1
+            fi
+          else
+            echo "ERROR: .clasprc.json not found"
+            exit 1
+          fi
 
       - name: Push to Google Apps Script
-        run: clasp push
+        run: clasp push --force
 
       - name: Deployment complete
         run: |
